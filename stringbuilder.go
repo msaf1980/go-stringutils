@@ -37,7 +37,7 @@ func (sb *Builder) String() string {
 	if sb.length == 0 {
 		return ""
 	}
-	return UnsafeString(&sb.data[0], sb.length)
+	return UnsafeStringFromPtr(&sb.data[0], sb.length)
 }
 
 // Grow grows b's capacity, if necessary, to guarantee space for

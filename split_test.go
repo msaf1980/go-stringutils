@@ -1,6 +1,7 @@
 package stringutils
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -55,5 +56,46 @@ func Benchmark_Split2(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_, _, _ = Split2(s, "&")
+	}
+}
+
+func TestSplitN(t *testing.T) {
+	buf := make([]string, 4)
+	tests := []struct {
+		s       string
+		sep     string
+		want    []string
+		wantPos int
+	}{
+		{"", ",", []string{""}, 0},
+		{"test", ",", []string{"test"}, 4},
+		{"test1,2", ",", []string{"test1", "2"}, 7},
+		{"test1.2.test3.", ".", []string{"test1", "2", "test3", ""}, 14},
+		{"test1.2.test3.4", ".", []string{"test1", "2", "test3", "4"}, 15},
+		{"test1.2.test3.4.", ".", []string{"test1", "2", "test3", "4"}, 16},
+		{"test1.2.test3.4.5", ".", []string{"test1", "2", "test3", "4"}, 16},
+	}
+	for _, tt := range tests {
+		t.Run(tt.s, func(t *testing.T) {
+			got, gotPos := SplitN(tt.s, tt.sep, buf)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SplitN() = %v, want %v", got, tt.want)
+			}
+			if gotPos != tt.wantPos {
+				t.Errorf("SplitN() pos = %d, want %d", gotPos, tt.wantPos)
+			}
+		})
+	}
+}
+
+func Benchmark_SplitN(b *testing.B) {
+	buf := make([]string, 4)
+	s := "test1.2.test3.4.5"
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = SplitN(s, ".", buf)
 	}
 }

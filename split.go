@@ -9,25 +9,21 @@ var empthy = ""
 //   If s or sep string is empthy: 's' '' 1
 //   In other cases: 's0' 's2' 2
 func Split2(s string, sep string) (string, string, int) {
-	if sep == "" {
+	if len(sep) == 0 {
 		return s, empthy, 1
 	}
 
 	if pos := strings.Index(s, sep); pos == -1 {
 		return s, empthy, 1
-	} else if pos == len(s)-1 {
+	} else if pos == len(s)-len(sep) {
 		return s[0:pos], empthy, 2
 	} else {
-		return s[0:pos], s[pos+1:], 2
+		return s[0:pos], s[pos+len(sep):], 2
 	}
 }
 
-func truncate(s *[]string, to int) {
-	*s = (*s)[:to]
-}
-
 // SplitN return splitted slice (use pre-allocated buffer) and end position (for detect if string contains more fields for split)
-func SplitN(s string, sep string, buf []string) ([]string, int) {
+func SplitN(s string, sep string, buf []string) []string {
 	n := len(buf)
 	i := 0
 	p := 0
@@ -35,20 +31,21 @@ func SplitN(s string, sep string, buf []string) ([]string, int) {
 	for i < n {
 		if pos := strings.Index(s, sep); pos == -1 {
 			buf[i] = s
-			return buf[0 : i+1], p + len(s)
+			return buf[0 : i+1]
 		} else {
 			buf[i] = s[0:pos]
 			p += pos + len(sep)
 			i++
-			if i == n {
+			if pos+len(sep) == len(s) {
+				buf[i] = s[pos:pos]
+				return buf[0 : i+1]
+			}
+			s = s[pos+len(sep):]
+			if i == n-1 {
+				buf[i] = s
 				break
 			}
-			if pos+1 == len(s) {
-				buf[i] = s[pos:pos]
-				return buf[0 : i+1], p
-			}
-			s = s[pos+1:]
 		}
 	}
-	return buf[0:n], p
+	return buf[0 : i+1]
 }

@@ -19,6 +19,8 @@ func Test_Split2(t *testing.T) {
 		{"test", "&", "test", "", 1},
 		{"test&", "&", "test", "", 2},
 		{"test&after", "&", "test", "after", 2},
+		{"test=&after", "=&", "test", "after", 2},
+		{"тестПроверкАпосле", "ПроверкА", "тест", "после", 2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.s+" -> "+tt.sep, func(t *testing.T) {
@@ -62,27 +64,25 @@ func Benchmark_Split2(b *testing.B) {
 func TestSplitN(t *testing.T) {
 	buf := make([]string, 4)
 	tests := []struct {
-		s       string
-		sep     string
-		want    []string
-		wantPos int
+		s    string
+		sep  string
+		want []string
 	}{
-		{"", ",", []string{""}, 0},
-		{"test", ",", []string{"test"}, 4},
-		{"test1,2", ",", []string{"test1", "2"}, 7},
-		{"test1.2.test3.", ".", []string{"test1", "2", "test3", ""}, 14},
-		{"test1.2.test3.4", ".", []string{"test1", "2", "test3", "4"}, 15},
-		{"test1.2.test3.4.", ".", []string{"test1", "2", "test3", "4"}, 16},
-		{"test1.2.test3.4.5", ".", []string{"test1", "2", "test3", "4"}, 16},
+		{"", ",", []string{""}},
+		{"test", ",", []string{"test"}},
+		{"test1,2", ",", []string{"test1", "2"}},
+		{"test1.2.test3.", ".", []string{"test1", "2", "test3", ""}},
+		{"test1=.2.test3.", "=.", []string{"test1", "2.test3."}},
+		{"test1.2.test3.4", ".", []string{"test1", "2", "test3", "4"}},
+		{"test1.2.test3.4.", ".", []string{"test1", "2", "test3", "4."}},
+		{"test1.2.test3.4.5", ".", []string{"test1", "2", "test3", "4.5"}},
+		{"тестПА1ПА2Пк3ПА4ПА5", "ПА", []string{"тест", "1", "2Пк3", "4ПА5"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.s, func(t *testing.T) {
-			got, gotPos := SplitN(tt.s, tt.sep, buf)
+			got := SplitN(tt.s, tt.sep, buf)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("SplitN() = %v, want %v", got, tt.want)
-			}
-			if gotPos != tt.wantPos {
-				t.Errorf("SplitN() pos = %d, want %d", gotPos, tt.wantPos)
 			}
 		})
 	}
@@ -96,6 +96,7 @@ func Benchmark_SplitN(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_, _ = SplitN(s, ".", buf)
+		ss := SplitN(s, ".", buf)
+		_ = ss
 	}
 }

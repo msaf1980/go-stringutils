@@ -217,6 +217,48 @@ func TestBuilder_Write2(t *testing.T) {
 	}
 }
 
+func TestBuilder_WriteInt(t *testing.T) {
+	tests := []struct {
+		n    int64
+		want string
+	}{
+		{10, "10"},
+		{-123, "10-123"},
+		{-428009, "10-123-428009"},
+		{328007, "10-123-428009328007"},
+	}
+	var sb Builder
+	for id, tt := range tests {
+		t.Run("Test #"+strconv.Itoa(id), func(t *testing.T) {
+			sb.WriteInt(tt.n, 10)
+			if sb.String() != tt.want {
+				t.Errorf("String() = '%s', want '%s'", sb.String(), tt.want)
+			}
+		})
+	}
+}
+
+func TestBuilder_WriteUint(t *testing.T) {
+	tests := []struct {
+		n    uint64
+		want string
+	}{
+		{10, "10"},
+		{123, "10123"},
+		{428009, "10123428009"},
+		{328007, "10123428009328007"},
+	}
+	var sb Builder
+	for id, tt := range tests {
+		t.Run("Test #"+strconv.Itoa(id), func(t *testing.T) {
+			sb.WriteUint(tt.n, 10)
+			if sb.String() != tt.want {
+				t.Errorf("String() = '%s', want '%s'", sb.String(), tt.want)
+			}
+		})
+	}
+}
+
 func Benchmark_String_RawCopy(b *testing.B) {
 	buf := make([]byte, 1000000)
 	pos := 0
@@ -314,5 +356,75 @@ func BenchmarkThis_StringsBuilderString(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		_ = sb.String()
+	}
+}
+
+func BenchmarkThis_Builder_WriteIntSmall(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	var n int64 = 10
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+128 > sb.Cap() {
+			sb.Reset()
+		}
+		sb.WriteInt(n, 10)
+	}
+}
+
+func BenchmarkStd_strconv_FormatIntSmall(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	var n int64 = 10
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+128 > sb.Cap() {
+			sb.Reset()
+		}
+		s := strconv.FormatInt(n, 10)
+		sb.WriteString(s)
+	}
+}
+
+func BenchmarkThis_Builder_WriteIntLarge(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	var n int64 = 102400
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+128 > sb.Cap() {
+			sb.Reset()
+		}
+		sb.WriteInt(n, 10)
+	}
+}
+
+func BenchmarkStd_strconv_FormatIntLarge(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	var n int64 = 102400
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+128 > sb.Cap() {
+			sb.Reset()
+		}
+		s := strconv.FormatInt(n, 10)
+		sb.WriteString(s)
 	}
 }

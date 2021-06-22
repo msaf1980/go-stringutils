@@ -53,6 +53,12 @@ func TestTemplate_Execute(t *testing.T) {
 			"two_one": "2_1", "two_two": "2_2",
 			"three": map[string]interface{}{"three_four": "3_4"},
 		},
+		"int32":   int32(-1),
+		"uint32":  uint32(1),
+		"int64":   int64(-2),
+		"uint64":  uint64(2),
+		"float32": 1.3,
+		"float64": 2.4,
 	}
 	tests := []struct {
 		format  string
@@ -71,6 +77,8 @@ func TestTemplate_Execute(t *testing.T) {
 		{format: "%{query} %{one.two_one} %{one.three.three_four}", want: "URL 2_1 3_4", wantErr: false},
 		{format: "%{query} %{one.two_one} %{one.three.three_four.2}", want: "", wantErr: true},
 		{format: "%{query} %{one.two_one} %{one.three}", want: "", wantErr: true},
+		// non-string data types
+		{format: "%{int32} %{uint32} %{int64} %{uint64} %{float32} %{float64}", want: "-1 1 -2 2 1.3 2.4", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {

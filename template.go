@@ -2,6 +2,7 @@ package stringutils
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -69,16 +70,28 @@ func lookupParam(p templateParam, params map[string]interface{}) (string, error)
 				// end of templateParam, so check param value
 				if s, ok := v.(string); ok {
 					return s, nil
+				} else if f, ok := v.(float64); ok {
+					return strconv.FormatFloat(f, 'f', -1, 64), nil
+				} else if f, ok := v.(float32); ok {
+					return strconv.FormatFloat(float64(f), 'f', -1, 32), nil
+				} else if n, ok := v.(int32); ok {
+					return strconv.FormatInt(int64(n), 10), nil
+				} else if n, ok := v.(uint32); ok {
+					return strconv.FormatUint(uint64(n), 10), nil
+				} else if n, ok := v.(int64); ok {
+					return strconv.FormatInt(n, 10), nil
+				} else if n, ok := v.(uint64); ok {
+					return strconv.FormatUint(n, 10), nil
 				}
-				return "", fmt.Errorf("end of template param when field lookup %s: %s", p[i], p[0])
+				return "", fmt.Errorf("incorect field type when lookup template param field %s (%s): '%+v'", p[i], p[0], v)
 			}
 			if mv, ok = v.(map[string]interface{}); !ok {
-				return "", fmt.Errorf("unexpected end of params map when field lookup %s: %s", p[i], p[0])
+				return "", fmt.Errorf("unexpected end of params map when template field lookup %s (%s): '%+v'", p[i], p[0], v)
 			}
 		}
 	}
 
-	return "", fmt.Errorf("unknown field: %+v", p[0])
+	return "", fmt.Errorf("unknown field in template param: %+v", p[0])
 }
 
 func loopkupTemplateNode(t interface{}, params map[string]interface{}) (string, error) {

@@ -11,3 +11,5 @@ Some string utils
 
 
 `Builder` very simular to strings.Builder, but has better perfomance (at golang 1.14).
+
+`Template` is a simple templating system

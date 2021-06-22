@@ -100,3 +100,32 @@ func Benchmark_SplitN(b *testing.B) {
 		_ = ss
 	}
 }
+
+func Benchmark_SplitN_Check(b *testing.B) {
+	buf := make([]string, 1)
+	s := "test1.2.test3.4.5"
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		count := strings.Count(s, ".")
+		if len(buf) < count {
+			buf = make([]string, count+1)
+		}
+		ss := SplitN(s, ".", buf)
+		_ = ss
+	}
+}
+
+func Benchmark_Strings_Split(b *testing.B) {
+	s := "test1.2.test3.4.5"
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		ss := strings.Split(s, ".")
+		_ = ss
+	}
+}

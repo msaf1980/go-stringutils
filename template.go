@@ -68,22 +68,36 @@ func lookupParam(p templateParam, params map[string]interface{}) (string, error)
 		if v, ok = mv[p[i]]; ok {
 			if i == lp {
 				// end of templateParam, so check param value
-				if s, ok := v.(string); ok {
-					return s, nil
-				} else if f, ok := v.(float64); ok {
-					return strconv.FormatFloat(f, 'f', -1, 64), nil
-				} else if f, ok := v.(float32); ok {
-					return strconv.FormatFloat(float64(f), 'f', -1, 32), nil
-				} else if n, ok := v.(int32); ok {
+				switch n := v.(type) {
+				case string:
+					return n, nil
+				case float64:
+					return strconv.FormatFloat(n, 'f', -1, 64), nil
+				case float32:
+					return strconv.FormatFloat(float64(n), 'f', -1, 32), nil
+				case int32:
 					return strconv.FormatInt(int64(n), 10), nil
-				} else if n, ok := v.(uint32); ok {
+				case uint32:
 					return strconv.FormatUint(uint64(n), 10), nil
-				} else if n, ok := v.(int64); ok {
+				case int64:
 					return strconv.FormatInt(n, 10), nil
-				} else if n, ok := v.(uint64); ok {
+				case uint64:
 					return strconv.FormatUint(n, 10), nil
+				case int16:
+					return strconv.FormatInt(int64(n), 10), nil
+				case uint16:
+					return strconv.FormatUint(uint64(n), 10), nil
+				case int8:
+					return strconv.FormatInt(int64(n), 10), nil
+				case uint8:
+					return strconv.FormatUint(uint64(n), 10), nil
+				case int:
+					return strconv.FormatInt(int64(n), 10), nil
+				case uint:
+					return strconv.FormatUint(uint64(n), 10), nil
+				default:
+					return "", fmt.Errorf("incorect field type when lookup template param field %s (%s): '%+v'", p[i], p[0], v)
 				}
-				return "", fmt.Errorf("incorect field type when lookup template param field %s (%s): '%+v'", p[i], p[0], v)
 			}
 			if mv, ok = v.(map[string]interface{}); !ok {
 				return "", fmt.Errorf("unexpected end of params map when template field lookup %s (%s): '%+v'", p[i], p[0], v)

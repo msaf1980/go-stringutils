@@ -57,6 +57,12 @@ func TestTemplate_Execute(t *testing.T) {
 		"uint32":  uint32(1),
 		"int64":   int64(-2),
 		"uint64":  uint64(2),
+		"int16":   int16(-1),
+		"uint16":  uint16(1),
+		"int8":    int8(-1),
+		"uint8":   uint8(1),
+		"int":     -1,
+		"uint":    1,
 		"float32": 1.3,
 		"float64": 2.4,
 	}
@@ -79,6 +85,9 @@ func TestTemplate_Execute(t *testing.T) {
 		{format: "%{query} %{one.two_one} %{one.three}", want: "", wantErr: true},
 		// non-string data types
 		{format: "%{int32} %{uint32} %{int64} %{uint64} %{float32} %{float64}", want: "-1 1 -2 2 1.3 2.4", wantErr: false},
+		{format: "%{int16} %{uint16}", want: "-1 1", wantErr: false},
+		{format: "%{int8} %{uint8}", want: "-1 1", wantErr: false},
+		{format: "%{int} %{uint}", want: "-1 1", wantErr: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {

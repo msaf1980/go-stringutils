@@ -344,6 +344,23 @@ func BenchmarkThis_Builder_Write(b *testing.B) {
 	}
 }
 
+func BenchmarkThis_Builder_WriteBytes(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	bytes := []byte("asdfghjklqwertyuiopzxcvbnm1234567890")
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+len(bytes) > sb.Cap() {
+			sb.Reset()
+		}
+		sb.WriteBytes(bytes)
+	}
+}
+
 func BenchmarkThis_StringsBuilderString(b *testing.B) {
 	var sb Builder
 	sb.Grow(1000000)

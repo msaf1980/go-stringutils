@@ -125,7 +125,7 @@ func (sb *Builder) WriteString(s string) (int, error) {
 }
 
 // WriteByte appends the byte c to b's buffer.
-func (sb *Builder) WriteByte(c byte) {
+func (sb *Builder) WriteByte(c byte) error {
 	if sb.length == cap(sb.data) {
 		if sb.length == 0 {
 			sb.Grow(2 * scaleFactor)
@@ -135,12 +135,16 @@ func (sb *Builder) WriteByte(c byte) {
 	}
 	sb.data[sb.length] = c
 	sb.length++
+
+	return nil
 }
 
 // WriteRune appends the UTF-8 encoding of Unicode code point r to b's buffer.
-func (sb *Builder) WriteRune(r rune) {
+func (sb *Builder) WriteRune(r rune) (int, error) {
 	if r < utf8.RuneSelf {
 		sb.WriteByte(byte(r))
+
+		return 1, nil
 	} else {
 		if sb.length+utf8.UTFMax > cap(sb.data) {
 			if sb.length > 2*utf8.UTFMax {
@@ -149,6 +153,9 @@ func (sb *Builder) WriteRune(r rune) {
 				sb.Grow(sb.length + utf8.UTFMax*scaleFactor)
 			}
 		}
-		sb.length += utf8.EncodeRune(sb.data[sb.length:sb.length+utf8.UTFMax], r)
+		length := utf8.EncodeRune(sb.data[sb.length:sb.length+utf8.UTFMax], r)
+		sb.length += length
+
+		return length, nil
 	}
 }

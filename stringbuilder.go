@@ -105,9 +105,9 @@ func (sb *Builder) WriteBytes(bytes []byte) {
 }
 
 // WriteString appends the contents of s to b's buffer.
-func (sb *Builder) WriteString(s string) {
+func (sb *Builder) WriteString(s string) (int, error) {
 	if len(s) == 0 {
-		return
+		return 0, nil
 	}
 	newlen := sb.length + len(s)
 	if newlen > cap(sb.data) {
@@ -120,6 +120,8 @@ func (sb *Builder) WriteString(s string) {
 	}
 	copy(sb.data[sb.length:], s)
 	sb.length += len(s)
+
+	return len(s), nil
 }
 
 // WriteByte appends the byte c to b's buffer.

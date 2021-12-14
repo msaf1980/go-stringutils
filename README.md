@@ -12,6 +12,9 @@ Some string utils
 `Reverse(string) string` return reversed string (rune-wise left to right)
 `ReverseSegments(string, delim) string` return reversed string by segments around string delimiter (`ReverseSegments("hello, world", ", ")` return `world, hello`).
 
-`Builder` very simular to strings.Builder, but has better perfomance (at golang 1.14).
+`Replace(s, old, new string, n int) (string, changed)` // Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. Also return change flag.
+`ReplaceAll(s, old, new string) (string, changed)` // Replace returns a copy of the string s with all non-overlapping instances of old replaced  by new. Also return change flag.
+
+`Builder` very simular to strings.Builder, but has better perfomance (reallocate with scale 2, if needed) (at golang 1.14).
 
 `Template` is a simple templating system

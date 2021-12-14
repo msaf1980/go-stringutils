@@ -9,6 +9,7 @@ Some string utils
 `Split2(s string, sep string) (string, string, int)`  Split2 return the split string results (without memory allocations). Use Index for find separator.
 `SplitN(s string, sep string, buf []string) ([]string, int)` // SplitN return splitted slice (use pre-allocated buffer) and end position (for detect if string contains more fields for split). Use Index for find separator.
 
+`Reverse(string) string` return reversed string (rune-wise left to right)
 
 `Builder` very simular to strings.Builder, but has better perfomance (at golang 1.14).
 

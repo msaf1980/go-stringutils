@@ -15,6 +15,8 @@ Some string utils
 `Replace(s, old, new string, n int) (string, changed)` // Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. Also return change flag.
 `ReplaceAll(s, old, new string) (string, changed)` // Replace returns a copy of the string s with all non-overlapping instances of old replaced  by new. Also return change flag.
 
-`Builder` very simular to strings.Builder, but has better perfomance (reallocate with scale 2, if needed) (at golang 1.14).
+`WriteString(w io.Writer, s string) (int, error)` writes the contents of the string s to w, which accepts a slice of bytes. No bytes alloation instead of io.WriteString.
+
+`Builder` very simular to strings.Builder, but has better perfomance in some cases (reallocate with scale 2, if needed, also append numbers in-place) (at golang 1.14).
 
 `Template` is a simple templating system

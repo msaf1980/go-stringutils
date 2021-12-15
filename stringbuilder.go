@@ -159,3 +159,8 @@ func (sb *Builder) WriteRune(r rune) (int, error) {
 		return length, nil
 	}
 }
+
+// Flush fake makethod for combatibility with buffered writer
+func (sb *Builder) Flush() error {
+	return nil
+}

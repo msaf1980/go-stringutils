@@ -1,6 +1,7 @@
 package stringutils
 
 import (
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
@@ -176,7 +177,7 @@ func TestBuilder_WriteByte(t *testing.T) {
 	}
 }
 
-func TestBuilder_Write2(t *testing.T) {
+func TestBuilder_WriteRune(t *testing.T) {
 	const s0 = "hello 世界"
 
 	tests := []struct {
@@ -219,20 +220,26 @@ func TestBuilder_Write2(t *testing.T) {
 
 func TestBuilder_WriteInt(t *testing.T) {
 	tests := []struct {
-		n    int64
-		want string
+		n           int64
+		appendSpace bool
+		want        string
 	}{
-		{10, "10"},
-		{-123, "10-123"},
-		{-428009, "10-123-428009"},
-		{328007, "10-123-428009328007"},
+		{n: 10, want: "10"},
+		{n: -123, want: "10-123"},
+		{n: -428009, want: "10-123-428009"},
+		{n: 328007, want: "10-123-428009328007"},
+		{n: math.MaxInt64, appendSpace: true, want: "10-123-428009328007 " + strconv.FormatUint(math.MaxInt64, 10)},
 	}
 	var sb Builder
+	sb.Grow(128)
 	for id, tt := range tests {
 		t.Run("Test #"+strconv.Itoa(id), func(t *testing.T) {
+			if tt.appendSpace {
+				sb.WriteRune(' ')
+			}
 			sb.WriteInt(tt.n, 10)
 			if sb.String() != tt.want {
-				t.Errorf("String() = '%s', want '%s'", sb.String(), tt.want)
+				t.Errorf("String()\n'%s'\nwant\n'%s'", sb.String(), tt.want)
 			}
 		})
 	}
@@ -240,20 +247,160 @@ func TestBuilder_WriteInt(t *testing.T) {
 
 func TestBuilder_WriteUint(t *testing.T) {
 	tests := []struct {
-		n    uint64
-		want string
+		n           uint64
+		appendSpace bool
+		want        string
 	}{
-		{10, "10"},
-		{123, "10123"},
-		{428009, "10123428009"},
-		{328007, "10123428009328007"},
+		{n: 10, want: "10"},
+		{n: 123, want: "10123"},
+		{n: 428009, want: "10123428009"},
+		{n: 328007, want: "10123428009328007"},
+		{n: math.MaxUint64, appendSpace: true, want: "10123428009328007 " + strconv.FormatUint(math.MaxUint64, 10)},
 	}
 	var sb Builder
+	sb.Grow(128)
 	for id, tt := range tests {
 		t.Run("Test #"+strconv.Itoa(id), func(t *testing.T) {
+			if tt.appendSpace {
+				sb.WriteString(" ")
+			}
 			sb.WriteUint(tt.n, 10)
 			if sb.String() != tt.want {
-				t.Errorf("String() = '%s', want '%s'", sb.String(), tt.want)
+				t.Errorf("String()\n'%s'\nwant\n'%s'", sb.String(), tt.want)
+			}
+		})
+	}
+}
+
+func TestBuilder_WriteFloat(t *testing.T) {
+	tests := []struct {
+		n           float64
+		appendSpace bool
+		want        string
+	}{
+		{n: 10.0, want: "10"},
+		{n: -123.0, want: "10-123"},
+		{n: -428009.45678444, want: "10-123-428009.45678444"},
+		{n: math.MaxFloat64, appendSpace: true, want: "10-123-428009.45678444 " + strconv.FormatFloat(math.MaxFloat64, 'f', -1, 64)},
+	}
+	var sb Builder
+	sb.Grow(128)
+	for id, tt := range tests {
+		t.Run("Test #"+strconv.Itoa(id), func(t *testing.T) {
+			if tt.appendSpace {
+				sb.WriteRune(' ')
+			}
+			sb.WriteFloat(tt.n, 'f', -1, 64)
+			if sb.String() != tt.want {
+				t.Errorf("String()\n'%s'\nwant\n'%s'", sb.String(), tt.want)
+			}
+		})
+	}
+}
+
+func TestBuilder(t *testing.T) {
+	const s0 = "hello 世界"
+
+	tests := []struct {
+		name    string
+		reset   bool
+		release bool
+		fn      func(b *Builder)
+		want    string
+	}{
+		{
+			name: "Write",
+			fn:   func(sb *Builder) { sb.Write([]byte(s0)) },
+			want: s0,
+		},
+		{
+			name: "WriteRune",
+			fn:   func(sb *Builder) { sb.WriteRune('a') },
+			want: s0 + "a",
+		},
+		{
+			name: "WriteRuneWide",
+			fn:   func(sb *Builder) { sb.WriteRune('世') },
+			want: s0 + "a世",
+		},
+		{
+			name: "WriteInt",
+			fn:   func(sb *Builder) { sb.WriteInt(math.MaxInt64, 10) },
+			want: s0 + "a世" + strconv.FormatUint(math.MaxInt64, 10),
+		},
+		{
+			name: "WriteString #1",
+			fn:   func(sb *Builder) { sb.WriteString(s0) },
+			want: s0 + "a世" + strconv.FormatUint(math.MaxInt64, 10) + s0,
+		},
+		{
+			name:  "WriteString #2",
+			reset: true,
+			fn:    func(sb *Builder) { sb.WriteString(s0) },
+			want:  s0,
+		},
+		{
+			name:    "WriteQuote",
+			release: true,
+			fn:      func(sb *Builder) { sb.WriteQuote(s0) },
+			want:    "\"" + s0 + "\"",
+		},
+		{
+			name: "WriteQuoteRune",
+			fn:   func(sb *Builder) { sb.WriteQuoteRune(' ') },
+			want: "\"" + s0 + "\"" + "' '",
+		},
+		{
+			name: "WriteQuoteRuneToASCII space",
+			fn:   func(sb *Builder) { sb.WriteQuoteRuneToASCII(' ') },
+			want: "\"" + s0 + "\"" + "' '' '",
+		},
+		{
+			name:    "WriteQuoteRuneToASCII ascii",
+			release: true,
+			fn:      func(sb *Builder) { sb.WriteQuoteRuneToASCII('a') },
+			want:    "'a'",
+		},
+		{
+			name:  "WriteQuoteRuneToASCII wide",
+			reset: true,
+			fn:    func(sb *Builder) { sb.WriteQuoteRuneToASCII('世') },
+			want:  `'\u4e16'`,
+		},
+		{
+			name:  "WriteQuoteRuneToGraphic",
+			reset: true,
+			fn:    func(sb *Builder) { sb.WriteQuoteRuneToGraphic('\u4e16') },
+			want:  "'世'",
+		},
+		{
+			name: "WriteQuoteToGraphic",
+			fn:   func(sb *Builder) { sb.WriteQuoteToGraphic("\u4e16") },
+			want: "'世'\"世\"",
+		},
+	}
+
+	var sb Builder
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.reset {
+				sb.Reset()
+				if sb.Len() != 0 {
+					t.Errorf("Length() = %d', want 0", sb.Len())
+				}
+			}
+			if tt.release {
+				sb.Release()
+				if sb.Cap() != 0 {
+					t.Errorf("Cap() = %d', want 0", sb.Cap())
+				}
+				if sb.Len() != 0 {
+					t.Errorf("Length() = %d', want 0", sb.Len())
+				}
+			}
+			tt.fn(&sb)
+			if sb.String() != tt.want {
+				t.Fatalf("String()\n'%s'\nwant\n'%s'", sb.String(), tt.want)
 			}
 		})
 	}
@@ -386,7 +533,7 @@ func BenchmarkThis_Builder_WriteIntSmall(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		if sb.Len()+128 > sb.Cap() {
+		if sb.Len()+1024 > sb.Cap() {
 			sb.Reset()
 		}
 		sb.WriteInt(n, 10)
@@ -442,6 +589,41 @@ func BenchmarkStd_strconv_FormatIntLarge(b *testing.B) {
 			sb.Reset()
 		}
 		s := strconv.FormatInt(n, 10)
+		sb.WriteString(s)
+	}
+}
+
+func BenchmarkThis_Builder_WriteFloat(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	var n float64 = 102400.12345667
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+128 > sb.Cap() {
+			sb.Reset()
+		}
+		sb.WriteFloat(n, 'f', -1, 64)
+	}
+}
+
+func BenchmarkStd_strconv_FormatFloat(b *testing.B) {
+	var sb Builder
+	sb.Grow(1000000)
+	sb.Reset()
+	var n float64 = 102400.12345667
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		if sb.Len()+128 > sb.Cap() {
+			sb.Reset()
+		}
+		s := strconv.FormatFloat(n, 'f', -1, 64)
 		sb.WriteString(s)
 	}
 }

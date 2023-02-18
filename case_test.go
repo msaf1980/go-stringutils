@@ -1,6 +1,7 @@
 package stringutils
 
 import (
+	"strings"
 	"testing"
 	"unicode"
 	"unicode/utf8"
@@ -214,3 +215,96 @@ var lowerTests = []StringTest{
 func TestWriteStringUpper(t *testing.T) { runBuilderTests(t, StringUpper, upperTests) }
 
 func TestWriteStringToLower(t *testing.T) { runBuilderTests(t, StringLower, lowerTests) }
+
+func Test_ToUpper(t *testing.T) {
+	t.Parallel()
+	res := ToUpper("/my/name/is/:param/*")
+	assert.Equal(t, "/MY/NAME/IS/:PARAM/*", res)
+}
+
+const (
+	largeStr = "/RePos/GoFiBer/FibEr/iSsues/187643/CoMmEnts/RePos/GoFiBer/FibEr/iSsues/CoMmEnts"
+	upperStr = "/REPOS/GOFIBER/FIBER/ISSUES/187643/COMMENTS/REPOS/GOFIBER/FIBER/ISSUES/COMMENTS"
+	lowerStr = "/repos/gofiber/fiber/issues/187643/comments/repos/gofiber/fiber/issues/comments"
+)
+
+func Benchmark_ToUpper(b *testing.B) {
+	var res string
+	b.Run("stringutils", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			res = ToUpper(largeStr)
+		}
+		assert.Equal(b, upperStr, res)
+	})
+	b.Run("stdlib", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			res = strings.ToUpper(largeStr)
+		}
+		assert.Equal(b, upperStr, res)
+	})
+}
+
+func Test_ToLower(t *testing.T) {
+	t.Parallel()
+	res := ToLower("/MY/NAME/IS/:PARAM/*")
+	assert.Equal(t, "/my/name/is/:param/*", res)
+	res = ToLower("/MY1/NAME/IS/:PARAM/*")
+	assert.Equal(t, "/my1/name/is/:param/*", res)
+	res = ToLower("/MY2/NAME/IS/:PARAM/*")
+	assert.Equal(t, "/my2/name/is/:param/*", res)
+	res = ToLower("/MY3/NAME/IS/:PARAM/*")
+	assert.Equal(t, "/my3/name/is/:param/*", res)
+	res = ToLower("/MY4/NAME/IS/:PARAM/*")
+	assert.Equal(t, "/my4/name/is/:param/*", res)
+}
+
+func Benchmark_ToLower(b *testing.B) {
+	var res string
+	b.Run("stringutils", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			res = ToLower(largeStr)
+		}
+		assert.Equal(b, lowerStr, res)
+	})
+	b.Run("stdlib", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			res = strings.ToLower(largeStr)
+		}
+		assert.Equal(b, lowerStr, res)
+	})
+}
+
+func Test_EqualFold(t *testing.T) {
+	t.Parallel()
+	res := EqualFold("/MY/NAME/IS/:PARAM/*", "/my/name/is/:param/*")
+	assert.Equal(t, true, res)
+	res = EqualFold("/MY1/NAME/IS/:PARAM/*", "/MY1/NAME/IS/:PARAM/*")
+	assert.Equal(t, true, res)
+	res = EqualFold("/my2/name/is/:param/*", "/my2/name")
+	assert.Equal(t, false, res)
+	res = EqualFold("/dddddd", "eeeeee")
+	assert.Equal(t, false, res)
+	res = EqualFold("\na", "*A")
+	assert.Equal(t, false, res)
+	res = EqualFold("/MY3/NAME/IS/:PARAM/*", "/my3/name/is/:param/*")
+	assert.Equal(t, true, res)
+	res = EqualFold("/MY4/NAME/IS/:PARAM/*", "/my4/nAME/IS/:param/*")
+	assert.Equal(t, true, res)
+}
+
+// go test -v -run=^$ -bench=Benchmark_EqualFold -benchmem -count=4
+func Benchmark_EqualFold(b *testing.B) {
+	var res bool
+	b.Run("stringutils", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			res = EqualFold(upperStr, lowerStr)
+		}
+		assert.Equal(b, true, res)
+	})
+	b.Run("stdlib", func(b *testing.B) {
+		for n := 0; n < b.N; n++ {
+			res = strings.EqualFold(upperStr, lowerStr)
+		}
+		assert.Equal(b, true, res)
+	})
+}

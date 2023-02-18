@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
-	"sync"
 	"sync/atomic"
 )
 
@@ -15,19 +14,18 @@ const (
 var (
 	uuidSeed    [24]byte
 	uuidCounter uint64
-	uuidSetup   sync.Once
-	// unitsSlice  = []byte("kmgtp")
 )
+
+func init() {
+	// Setup seed & counter once
+	if _, err := rand.Read(uuidSeed[:]); err != nil {
+		return
+	}
+	uuidCounter = binary.LittleEndian.Uint64(uuidSeed[:8])
+}
 
 // UUID generates an universally unique identifier (UUID)
 func UUID() string {
-	// Setup seed & counter once
-	uuidSetup.Do(func() {
-		if _, err := rand.Read(uuidSeed[:]); err != nil {
-			return
-		}
-		uuidCounter = binary.LittleEndian.Uint64(uuidSeed[:8])
-	})
 	if atomic.LoadUint64(&uuidCounter) <= 0 {
 		return emptyUUID
 	}

@@ -18,11 +18,12 @@ jobs:
     strategy:
       matrix:
         go:
-          - ^1.14
-          - ^1.16
-          - ^1.17
-          - ^1.18
-          - ^1
+          - 1.14.x
+          - 1.16.x
+          - 1.17.x
+          - 1.18.x
+          - 1.19.x
+          - 1.x
     steps:
 
     - name: Set up Go

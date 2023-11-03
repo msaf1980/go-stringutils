@@ -47,7 +47,7 @@ func (sb *Builder) Grow(capacity int) {
 	if capacity > sb.Cap() {
 		b := make([]byte, capacity)
 		copy(b, sb.data[:sb.length])
-		sb.data = b
+		sb.data = b[:cap(b)]
 	}
 }
 

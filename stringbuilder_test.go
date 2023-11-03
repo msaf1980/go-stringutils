@@ -88,7 +88,7 @@ func TestBuilder_WriteString(t *testing.T) {
 		{"one.", false, false, "one."},
 		{"twotwo.", false, false, "one.twotwo."},
 		{"", true, false, ""},
-		{"three.", false, false, "three."},
+		{"three.", true, false, "three."},
 		{"", false, true, ""},
 		{"four.", false, false, "four."},
 	}
